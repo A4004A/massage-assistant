@@ -1,0 +1,346 @@
+
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font-sans); }
+  .plan { padding: 1.5rem 0; max-width: 680px; }
+  .header-meta { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1.5rem; }
+  .badge { font-size: 12px; padding: 3px 10px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-secondary); color: var(--color-text-secondary); }
+  .badge.info { background: var(--color-background-info); color: var(--color-text-info); border-color: transparent; }
+  .section-title { font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-text-tertiary); margin: 2rem 0 0.75rem; }
+  .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 0.5rem; }
+  .metric { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 0.9rem 1rem; }
+  .metric-label { font-size: 12px; color: var(--color-text-secondary); margin-bottom: 4px; }
+  .metric-value { font-size: 22px; font-weight: 500; color: var(--color-text-primary); }
+  .metric-sub { font-size: 12px; color: var(--color-text-tertiary); margin-top: 2px; }
+  .stage { border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); margin-bottom: 12px; overflow: hidden; }
+  .stage-header { display: flex; align-items: flex-start; gap: 12px; padding: 1rem 1.25rem; cursor: pointer; user-select: none; }
+  .stage-header:hover { background: var(--color-background-secondary); }
+  .stage-num { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 500; flex-shrink: 0; margin-top: 1px; }
+  .stage-title-block { flex: 1; }
+  .stage-name { font-size: 15px; font-weight: 500; color: var(--color-text-primary); }
+  .stage-desc { font-size: 13px; color: var(--color-text-secondary); margin-top: 2px; }
+  .stage-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
+  .stage-hours { font-size: 14px; font-weight: 500; color: var(--color-text-primary); white-space: nowrap; }
+  .stage-weeks { font-size: 12px; color: var(--color-text-tertiary); white-space: nowrap; }
+  .chevron { font-size: 16px; color: var(--color-text-tertiary); margin-top: 4px; transition: transform 0.2s; flex-shrink: 0; }
+  .chevron.open { transform: rotate(180deg); }
+  .stage-body { padding: 0 1.25rem 1rem; border-top: 0.5px solid var(--color-border-tertiary); display: none; }
+  .stage-body.open { display: block; }
+  .tasks-label { font-size: 11px; font-weight: 500; color: var(--color-text-tertiary); text-transform: uppercase; letter-spacing: 0.07em; margin: 0.9rem 0 0.5rem; }
+  .task-row { display: flex; justify-content: space-between; align-items: baseline; padding: 5px 0; border-bottom: 0.5px solid var(--color-border-tertiary); font-size: 13px; color: var(--color-text-primary); gap: 8px; }
+  .task-row:last-child { border-bottom: none; }
+  .task-name { flex: 1; }
+  .task-hours { font-size: 12px; color: var(--color-text-secondary); white-space: nowrap; }
+  .tech-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 0.75rem; }
+  .tech-chip { font-size: 12px; padding: 3px 9px; border-radius: var(--border-radius-md); font-weight: 400; }
+  .note-box { margin-top: 0.75rem; padding: 0.75rem 1rem; border-radius: var(--border-radius-md); border-left: 2px solid; font-size: 13px; line-height: 1.6; }
+  .note-box.dig { background: var(--color-background-info); border-color: #378ADD; color: var(--color-text-info); }
+  .note-box.warn { background: var(--color-background-warning); border-color: #BA7517; color: var(--color-text-warning); }
+  .timeline { margin-top: 0.5rem; }
+  .tl-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .tl-label { font-size: 12px; color: var(--color-text-secondary); width: 200px; flex-shrink: 0; }
+  .tl-bar-wrap { flex: 1; height: 8px; background: var(--color-background-secondary); border-radius: 4px; overflow: hidden; }
+  .tl-bar { height: 100%; border-radius: 4px; }
+  .tl-val { font-size: 12px; color: var(--color-text-tertiary); width: 52px; text-align: right; white-space: nowrap; }
+  .conclusion { background: var(--color-background-secondary); border-radius: var(--border-radius-lg); padding: 1rem 1.25rem; margin-top: 0.5rem; font-size: 13px; line-height: 1.7; color: var(--color-text-primary); }
+  .conclusion p { margin-bottom: 0.5rem; }
+  .conclusion p:last-child { margin-bottom: 0; }
+  .risk-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 0.5rem; }
+  .risk-item { border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); padding: 0.75rem; font-size: 13px; }
+  .risk-title { font-weight: 500; color: var(--color-text-primary); margin-bottom: 3px; }
+  .risk-desc { color: var(--color-text-secondary); font-size: 12px; line-height: 1.5; }
+  @media (max-width: 480px) { .risk-grid { grid-template-columns: 1fr; } .tl-label { width: 120px; font-size: 11px; } }
+</style>
+
+<div class="plan">
+  <div class="header-meta">
+    <span class="badge info">Разработчик без опыта в AI/web</span>
+    <span class="badge">Глубокое погружение в код</span>
+    <span class="badge">MVP → Production</span>
+  </div>
+
+  <div class="section-title">Итого по проекту</div>
+  <div class="summary-grid">
+    <div class="metric">
+      <div class="metric-label">MVP v1 (без голоса)</div>
+      <div class="metric-value">~370 ч</div>
+      <div class="metric-sub">3.5–4.5 мес.</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">MVP v2 (с голосом)</div>
+      <div class="metric-value">~480 ч</div>
+      <div class="metric-sub">5–6 мес.</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Production-ready</div>
+      <div class="metric-value">+8–14 мес.</div>
+      <div class="metric-sub">после MVP v2</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Темп работы</div>
+      <div class="metric-value">3–4 ч/д</div>
+      <div class="metric-sub">5 дней в неделю</div>
+    </div>
+  </div>
+
+  <div class="section-title">Этапы разработки</div>
+  <div id="stages"></div>
+
+  <div class="section-title">Временная шкала</div>
+  <div class="timeline" id="timeline"></div>
+
+  <div class="section-title">Ключевые риски</div>
+  <div class="risk-grid">
+    <div class="risk-item">
+      <div class="risk-title"><i class="ti ti-stethoscope" aria-hidden="true"></i> Медицинская экспертиза</div>
+      <div class="risk-desc">Без реабилитолога или массажиста AI будет давать ненадёжные рекомендации. Это блокер для v1.</div>
+    </div>
+    <div class="risk-item">
+      <div class="risk-title"><i class="ti ti-camera" aria-hidden="true"></i> Качество съёмки</div>
+      <div class="risk-desc">Освещение, угол, одежда критически влияют на точность pose estimation. Нужны протоколы съёмки.</div>
+    </div>
+    <div class="risk-item">
+      <div class="risk-title"><i class="ti ti-shield-lock" aria-hidden="true"></i> Медданные клиентов</div>
+      <div class="risk-desc">Фото/видео тела — персональные данные. GDPR и аналоги должны быть заложены в архитектуру с самого начала.</div>
+    </div>
+    <div class="risk-item">
+      <div class="risk-title"><i class="ti ti-currency-dollar" aria-hidden="true"></i> Стоимость API</div>
+      <div class="risk-desc">OpenAI Realtime API при активном использовании может стоить $100–500/мес. Нужно закладывать в бюджет.</div>
+    </div>
+  </div>
+
+  <div class="section-title">Вывод</div>
+  <div class="conclusion">
+    <p>Для разработчика, который любит разбираться в деталях, сроки сдвигаются вверх относительно «минимальной» оценки — но это оправдано: глубокое понимание каждого слоя (MediaPipe pipeline, OpenAI context management, WebSocket state machine) обеспечит более устойчивую и расширяемую систему.</p>
+    <p>Самый критичный первый шаг — не код, а привлечение квалифицированного массажиста или реабилитолога для формирования протоколов. Без этого AI-слой будет технически работать, но генерировать потенциально опасные советы.</p>
+    <p>Рекомендуется использовать Claude Code или Cursor с самого начала как инструмент для понимания, а не только для генерации — задавать вопросы «почему», читать генерируемый код внимательно и проверять каждый паттерн.</p>
+  </div>
+</div>
+
+<script>
+const stages = [
+  {
+    num: "0",
+    color: "#888780",
+    bg: "#F1EFE8",
+    name: "Фундамент и настройка среды",
+    desc: "Изучение TypeScript, REST API, архитектура проекта",
+    hours: 50,
+    weeks: "1.5–2 нед.",
+    tasks: [
+      ["Архитектурный дизайн, выбор стека", "10 ч"],
+      ["TypeScript / JS для Python-разработчика", "20 ч"],
+      ["REST API, HTTP, async/await паттерны", "12 ч"],
+      ["Dev environment (Docker, venv, Node)", "8 ч"],
+    ],
+    tech: [
+      ["TypeScript", "#B5D4F4", "#0C447C"],
+      ["Python 3.11+", "#9FE1CB", "#085041"],
+      ["Docker", "#B5D4F4", "#0C447C"],
+      ["Git", "#D3D1C7", "#444441"],
+    ],
+    note: { type: "dig", text: "Для глубокого погружения: прочитать TypeScript Handbook целиком, не пропускать разделы про типы и async. Понять разницу между CommonJS и ESModules — она важна для всего стека." }
+  },
+  {
+    num: "1",
+    color: "#185FA5",
+    bg: "#E6F1FB",
+    name: "Backend & инфраструктура",
+    desc: "FastAPI + Supabase: хранение данных, аутентификация, загрузка файлов",
+    hours: 80,
+    weeks: "3–4 нед.",
+    tasks: [
+      ["FastAPI: структура проекта, роутинг, Pydantic модели", "20 ч"],
+      ["Supabase: схема БД, Row Level Security, Storage", "22 ч"],
+      ["Эндпоинты загрузки фото/видео", "15 ч"],
+      ["Модели данных: клиенты, сессии, оценки", "13 ч"],
+      ["Тестирование + разбор внутренней работы", "10 ч"],
+    ],
+    tech: [
+      ["FastAPI", "#9FE1CB", "#085041"],
+      ["Supabase", "#9FE1CB", "#085041"],
+      ["PostgreSQL", "#B5D4F4", "#0C447C"],
+      ["Pydantic", "#9FE1CB", "#085041"],
+      ["Python", "#9FE1CB", "#085041"],
+    ],
+    note: { type: "dig", text: "Изучить, как Supabase реализует RLS на уровне PostgreSQL — это не магия, а Row Level Security policies. Понять это сейчас сэкономит много времени при работе с медданными." }
+  },
+  {
+    num: "2",
+    color: "#3B6D11",
+    bg: "#EAF3DE",
+    name: "CV Pipeline / Pose Estimation",
+    desc: "MediaPipe, анализ осанки, асимметрии и подвижности по фото и видео",
+    hours: 110,
+    weeks: "4–5 нед.",
+    tasks: [
+      ["MediaPipe Pose: архитектура модели, landmarks, confidence", "25 ч"],
+      ["Извлечение скелета из статичных фото", "20 ч"],
+      ["Алгоритмы: углы суставов, асимметрия, смещение таза", "30 ч"],
+      ["Обработка видео: покадровый анализ, усреднение", "20 ч"],
+      ["Калибровка и тестирование на реальных данных", "15 ч"],
+    ],
+    tech: [
+      ["MediaPipe", "#C0DD97", "#27500A"],
+      ["OpenCV", "#C0DD97", "#27500A"],
+      ["NumPy", "#9FE1CB", "#085041"],
+      ["Python", "#9FE1CB", "#085041"],
+    ],
+    note: { type: "dig", text: "MediaPipe возвращает нормализованные координаты (0–1). Для реальных углов нужно перевести в пиксели с учётом aspect ratio. Также: изучить BlazePose paper — понимание того, как обучалась модель, объясняет её ограничения (боковые ракурсы, частичная окклюзия)." }
+  },
+  {
+    num: "3",
+    color: "#BA7517",
+    bg: "#FAEEDA",
+    name: "AI Reasoning Layer",
+    desc: "OpenAI API: генерация рекомендаций по массажу на основе CV-анализа",
+    hours: 70,
+    weeks: "2.5–3 нед.",
+    tasks: [
+      ["OpenAI API: токены, контекстное окно, temperature", "15 ч"],
+      ["Prompt engineering для медицинского контекста", "25 ч"],
+      ["Structured outputs (JSON mode), валидация ответов", "12 ч"],
+      ["Управление историей сессии и контекстом клиента", "10 ч"],
+      ["Тестирование с реальными массажистами", "8 ч"],
+    ],
+    tech: [
+      ["OpenAI API", "#FAC775", "#633806"],
+      ["Prompt Engineering", "#FAC775", "#633806"],
+      ["Pydantic", "#9FE1CB", "#085041"],
+    ],
+    note: { type: "dig", text: "Изучить, как именно считаются токены (tiktoken). Понять разницу между system/user/assistant ролями на уровне трансформера, а не только API. Это поможет при оптимизации стоимости и управлении контекстом длинных сессий." }
+  },
+  {
+    num: "4",
+    color: "#533AB7",
+    bg: "#EEEDFE",
+    name: "Web Frontend",
+    desc: "React-приложение: загрузка файлов, отображение результатов, управление сессией",
+    hours: 100,
+    weeks: "3.5–4.5 нед.",
+    tasks: [
+      ["React: компоненты, хуки, state management", "30 ч"],
+      ["UI загрузки фото/видео с камеры или диска", "20 ч"],
+      ["Отображение результатов анализа и рекомендаций", "22 ч"],
+      ["История клиента, навигация между сессиями", "15 ч"],
+      ["UX-полировка, адаптивность, обработка ошибок", "13 ч"],
+    ],
+    tech: [
+      ["React", "#B5D4F4", "#0C447C"],
+      ["TypeScript", "#B5D4F4", "#0C447C"],
+      ["Vite", "#D3D1C7", "#444441"],
+      ["Tailwind CSS", "#B5D4F4", "#0C447C"],
+    ],
+    note: { type: "warn", text: "React Native на этом этапе — избыточен. Начать с web-приложения: быстрее, проще отлаживать, достаточно для MVP. Мобильное приложение — отдельный этап после валидации продукта." }
+  },
+  {
+    num: "5",
+    color: "#993C1D",
+    bg: "#FAECE7",
+    name: "Голосовой ассистент (MVP v2)",
+    desc: "OpenAI Realtime API: голосовое сопровождение массажиста во время сессии",
+    hours: 110,
+    weeks: "4–5 нед.",
+    tasks: [
+      ["WebSocket: двунаправленный стриминг, framing", "20 ч"],
+      ["OpenAI Realtime API: сессии, события, audio format", "25 ч"],
+      ["Audio pipeline: микрофон → PCM → API → speakers", "22 ч"],
+      ["State machine сессии массажа (этапы, контекст)", "25 ч"],
+      ["Interruption handling, barge-in, VAD настройка", "18 ч"],
+    ],
+    tech: [
+      ["OpenAI Realtime API", "#FAC775", "#633806"],
+      ["WebSocket", "#B5D4F4", "#0C447C"],
+      ["WebAudio API", "#B5D4F4", "#0C447C"],
+      ["PCM Audio", "#D3D1C7", "#444441"],
+    ],
+    note: { type: "dig", text: "Realtime API работает по WebSocket с бинарными фреймами PCM16 audio. Изучить WebAudio API на уровне AudioContext и ScriptProcessorNode — понять, как браузер захватывает и воспроизводит аудио без задержек. Это сложнейший технически этап проекта." }
+  },
+  {
+    num: "6",
+    color: "#444441",
+    bg: "#F1EFE8",
+    name: "Интеграция и тестирование",
+    desc: "Сборка всех слоёв, E2E тесты, производительность, документация",
+    hours: 70,
+    weeks: "2.5–3 нед.",
+    tasks: [
+      ["End-to-end интеграция всех компонентов", "25 ч"],
+      ["Нагрузочное тестирование CV pipeline", "12 ч"],
+      ["Оптимизация latency и стоимости API", "15 ч"],
+      ["Техническая документация для массажиста", "10 ч"],
+      ["Исправление edge cases", "8 ч"],
+    ],
+    tech: [
+      ["Pytest", "#9FE1CB", "#085041"],
+      ["Locust", "#C0DD97", "#27500A"],
+      ["Docker Compose", "#B5D4F4", "#0C447C"],
+    ],
+    note: { type: "dig", text: "На этом этапе важно профилировать весь pipeline: от загрузки фото до получения ответа AI. Типичные узкие места — MediaPipe на CPU (решение: ограничить разрешение), и холодный старт serverless функций (решение: keep-warm стратегия)." }
+  },
+];
+
+const container = document.getElementById('stages');
+stages.forEach((s, i) => {
+  const el = document.createElement('div');
+  el.className = 'stage';
+  const techHtml = s.tech.map(([name, bg, color]) =>
+    `<span class="tech-chip" style="background:${bg};color:${color}">${name}</span>`
+  ).join('');
+  const tasksHtml = s.tasks.map(([name, h]) =>
+    `<div class="task-row"><span class="task-name">${name}</span><span class="task-hours">${h}</span></div>`
+  ).join('');
+  const noteIcon = s.note.type === 'dig' ? 'ti-bulb' : 'ti-alert-triangle';
+  el.innerHTML = `
+    <div class="stage-header" onclick="toggle(this)">
+      <div class="stage-num" style="background:${s.bg};color:${s.color}">${s.num}</div>
+      <div class="stage-title-block">
+        <div class="stage-name">${s.name}</div>
+        <div class="stage-desc">${s.desc}</div>
+      </div>
+      <div class="stage-meta">
+        <div class="stage-hours">~${s.hours} ч</div>
+        <div class="stage-weeks">${s.weeks}</div>
+      </div>
+      <i class="ti ti-chevron-down chevron" aria-hidden="true"></i>
+    </div>
+    <div class="stage-body">
+      <div class="tasks-label">Задачи</div>
+      ${tasksHtml}
+      <div class="tasks-label" style="margin-top:0.9rem">Технологии</div>
+      <div class="tech-row">${techHtml}</div>
+      <div class="note-box ${s.note.type}"><i class="ti ${noteIcon}" aria-hidden="true"></i> ${s.note.text}</div>
+    </div>
+  `;
+  container.appendChild(el);
+});
+
+function toggle(header) {
+  const body = header.nextElementSibling;
+  const chev = header.querySelector('.chevron');
+  body.classList.toggle('open');
+  chev.classList.toggle('open');
+}
+
+const tlData = [
+  ["Фундамент (эт. 0)", 50, 480, "#888780"],
+  ["Backend (эт. 1)", 80, 480, "#185FA5"],
+  ["CV Pipeline (эт. 2)", 110, 480, "#3B6D11"],
+  ["AI Reasoning (эт. 3)", 70, 480, "#BA7517"],
+  ["Frontend (эт. 4)", 100, 480, "#533AB7"],
+  ["Голос MVP v2 (эт. 5)", 110, 480, "#993C1D"],
+  ["Интеграция (эт. 6)", 70, 480, "#444441"],
+];
+const tlEl = document.getElementById('timeline');
+tlData.forEach(([label, val, max, color]) => {
+  const pct = Math.round(val / max * 100);
+  const row = document.createElement('div');
+  row.className = 'tl-row';
+  row.innerHTML = `
+    <div class="tl-label">${label}</div>
+    <div class="tl-bar-wrap"><div class="tl-bar" style="width:${pct}%;background:${color}"></div></div>
+    <div class="tl-val">~${val} ч</div>
+  `;
+  tlEl.appendChild(row);
+});
+</script>
